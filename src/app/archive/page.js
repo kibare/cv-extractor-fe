@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Grid, Paper, Button, TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchArchivedPositions, fetchPositions } from '@/redux/slices/positionSlice';
+import { fetchArchivedPositions } from '@/redux/slices/positionSlice';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
+import { fetchArchivedCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/candidateSlice';
 import { editPosition, archivePosition } from '@/services/api';
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
@@ -16,7 +17,6 @@ const Archive = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
-  const [filteredPositions, setFilteredPositions] = useState([]);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -27,29 +27,23 @@ const Archive = () => {
     qualification: '',
   });
 
-  const archivedPositions = useSelector((state) => state.positions.archivedPositions);
   const departments = useSelector((state) => state.departments.departments);
-  const allPositions = useSelector((state) => state.positions.positions);
+  const archivedPositions = useSelector((state) => state.positions.archivedPositions);
+  const candidates = useSelector((state) => state.candidates.candidates);
 
   useEffect(() => {
     dispatch(fetchArchivedPositions());
     dispatch(fetchDepartments());
-    dispatch(fetchPositions());
+    dispatch(fetchAllCandidates());
   }, [dispatch]);
 
   useEffect(() => {
-    let positions = archivedPositions;
-
-    if (selectedDepartment) {
-      positions = positions.filter(position => position.DepartmentID === parseInt(selectedDepartment));
-    }
-
-    if (selectedPosition) {
-      positions = positions.filter(position => position.ID === parseInt(selectedPosition));
-    }
-
-    setFilteredPositions(positions);
-  }, [selectedDepartment, selectedPosition, archivedPositions]);
+    const filters = {
+      departmentId: selectedDepartment ? parseInt(selectedDepartment) : 0,
+      positionId: selectedPosition ? parseInt(selectedPosition) : 0
+    };
+    dispatch(fetchArchivedCandidatesByFilters(filters));
+  }, [selectedDepartment, selectedPosition, dispatch]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -75,7 +69,7 @@ const Archive = () => {
 
   const handleEditClick = () => {
     if (selectedPosition) {
-      const position = filteredPositions.find(pos => pos.ID === parseInt(selectedPosition));
+      const position = archivedPositions.find(pos => pos.ID === parseInt(selectedPosition));
       setEditFormData({
         name: position.Name,
         education: position.Education,
@@ -105,6 +99,11 @@ const Archive = () => {
     try {
       await editPosition(selectedPosition, editFormData);
       dispatch(fetchArchivedPositions());
+      const filters = {
+        departmentId: selectedDepartment ? parseInt(selectedDepartment) : 0,
+        positionId: selectedPosition ? parseInt(selectedPosition) : 0
+      };
+      dispatch(fetchArchivedCandidatesByFilters(filters));
       setOpenEditDialog(false);
     } catch (error) {
       console.error('Failed to edit position:', error);
@@ -125,13 +124,28 @@ const Archive = () => {
     }
   };
 
-  const data = filteredPositions.map((position) => ({
-    id: position.ID,
-    name: position.Name,
-    department: position.Department.Name,
-    education: position.Education,
-    location: position.Location,
-    minWorkExp: position.MinWorkExp,
+  const getDepartmentName = (departmentId) => {
+    const department = departments.find(dep => dep.ID === departmentId);
+    return department ? department.Name : '';
+  };
+
+  const filteredCandidates = candidates.filter(candidate => {
+    if (selectedDepartment && selectedPosition) {
+      return candidate.Position.IsArchive && candidate.Position.DepartmentID === parseInt(selectedDepartment) && candidate.Position.ID === parseInt(selectedPosition);
+    } else if (selectedDepartment) {
+      return candidate.Position.IsArchive && candidate.Position.DepartmentID === parseInt(selectedDepartment);
+    } else {
+      return candidate.Position.IsArchive;
+    }
+  });
+
+  const data = filteredCandidates.map(candidate => ({
+    id: candidate.ID,
+    name: candidate.Name,
+    position: candidate.Position.Name,
+    department: getDepartmentName(candidate.Position.DepartmentID) || candidate.Position.Department.Name,
+    score: candidate.Score,
+    qualified: candidate.IsQualified ? 'Qualified' : 'Not Qualified',
   }));
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.length - page * rowsPerPage);

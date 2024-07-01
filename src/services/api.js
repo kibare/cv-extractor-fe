@@ -62,6 +62,11 @@ export const getCandidatesByFilters = async (filters) => {
   return response.data;
 };
 
+export const getArchivedCandidatesByFilters = async (filters) => {
+  const response = await apiClient.post('/api/candidate/get-archived-candidates-by-filters', filters)
+  return response.data;
+}
+
 export const archivePosition = async (id) => {
   const response = await apiClient.put(`/api/position/archive-position/${id}`);
   return response.data;

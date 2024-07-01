@@ -1,7 +1,7 @@
 // src/redux/slices/candidateSlice.js
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getAllCandidates, getCandidatesByFilters } from '../../services/api';
+import { getAllCandidates, getArchivedCandidatesByFilters, getCandidatesByFilters } from '../../services/api';
 
 export const fetchAllCandidates = createAsyncThunk('candidates/fetchAllCandidates', async (_, thunkAPI) => {
   try {
@@ -15,6 +15,15 @@ export const fetchAllCandidates = createAsyncThunk('candidates/fetchAllCandidate
 export const fetchCandidatesByFilters = createAsyncThunk('candidates/fetchCandidatesByFilters', async (filters, thunkAPI) => {
   try {
     const response = await getCandidatesByFilters(filters);
+    return response;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(error.response.data);
+  }
+});
+
+export const fetchArchivedCandidatesByFilters = createAsyncThunk('candidates/fetchArchivedCandidatesByFilters', async (filters, thunkAPI) => {
+  try {
+    const response = await getArchivedCandidatesByFilters(filters);
     return response;
   } catch (error) {
     return thunkAPI.rejectWithValue(error.response.data);
