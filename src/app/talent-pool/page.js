@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
 import { fetchPositions } from '@/redux/slices/positionSlice';
 import { fetchCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/candidateSlice';
-import { editPosition, archivePosition } from '@/services/api'; // Import the API function to archive position
+import { editPosition, archivePosition } from '@/services/api';
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
 
@@ -16,11 +16,11 @@ const TalentPool = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
-  const [openEditDialog, setOpenEditDialog] = useState(false); // For edit position dialog
+  const [openEditDialog, setOpenEditDialog] = useState(false); 
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
   const [positions, setPositions] = useState([]);
-  const [editFormData, setEditFormData] = useState({ // Form data for editing position
+  const [editFormData, setEditFormData] = useState({ 
     name: '',
     education: '',
     location: '',
@@ -78,7 +78,7 @@ const TalentPool = () => {
 
   const handleDepartmentChange = (event) => {
     setSelectedDepartment(event.target.value);
-    setSelectedPosition(''); // Reset the selected position when department changes
+    setSelectedPosition(''); 
   };
 
   const handlePositionChange = (event) => {
@@ -115,9 +115,8 @@ const TalentPool = () => {
   const handleEditFormSubmit = async (event) => {
     event.preventDefault();
     try {
-      await editPosition(selectedPosition, editFormData); // Call the API to edit the position
+      await editPosition(selectedPosition, editFormData); 
       dispatch(fetchPositions());
-      // Fetch candidates again after editing position
       const filters = {
         departmentId: selectedDepartment ? parseInt(selectedDepartment) : 0,
         positionId: selectedPosition ? parseInt(selectedPosition) : 0
@@ -133,7 +132,7 @@ const TalentPool = () => {
   const handleArchiveClick = async () => {
     if (selectedPosition) {
       try {
-        await archivePosition(selectedPosition); // Call the API to archive the position
+        await archivePosition(selectedPosition);
         dispatch(fetchPositions());
         setSelectedPosition('');
       } catch (error) {
@@ -148,7 +147,9 @@ const TalentPool = () => {
     return department ? department.Name : '';
   };
 
-  const data = candidates.map(candidate => ({
+  const activeCandidates = candidates.filter(candidate => !candidate.Position.IsArchive);
+
+  const data = activeCandidates.map(candidate => ({
     id: candidate.ID,
     name: candidate.Name,
     position: candidate.Position.Name,
@@ -211,13 +212,13 @@ const TalentPool = () => {
             <Grid item xs={12} md={4}>
               <Paper elevation={3} sx={{ padding: 2, height: 'auto' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Candidates</Typography>
-                <Typography variant="h4" sx={{ my: 1.5, fontWeight: 'bold' }}>{candidates.length}</Typography>
+                <Typography variant="h4" sx={{ my: 1.5, fontWeight: 'bold' }}>{activeCandidates.length}</Typography>
               </Paper>
             </Grid>
             <Grid item xs={12} md={4}>
               <Paper elevation={3} sx={{ padding: 2, height: 'auto' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Qualified Candidate</Typography>
-                <Typography variant="h4" sx={{ my: 1.5, fontWeight: 'bold' }}>{candidates.filter(c => c.IsQualified).length}</Typography>
+                <Typography variant="h4" sx={{ my: 1.5, fontWeight: 'bold' }}>{activeCandidates.filter(c => c.IsQualified).length}</Typography>
               </Paper>
             </Grid>
           </Grid>

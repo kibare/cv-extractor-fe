@@ -72,4 +72,7 @@ export const fetchArchivedPositions = async () => {
   return response.data;
 };
 
-
+export const getUserData = async () => {
+  const response = await apiClient.get('/api/user/get-user');
+  return response.data
+};

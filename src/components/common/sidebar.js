@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '@/redux/slices/authSlice';
+import { fetchUserData } from '@/redux/slices/userSlice'; // Assuming you have a slice to fetch user data
 import { Typography, List, ListItem, ListItemIcon, ListItemText, Box, Menu, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Button, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -64,6 +65,11 @@ const Sidebar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const user = useSelector((state) => state.user.user); // Assuming you have a user slice and state
+
+  useEffect(() => {
+    dispatch(fetchUserData()); // Fetch user data after component mounts
+  }, [dispatch]);
 
   const handleNavigation = (path) => {
     router.push(path);
@@ -200,7 +206,7 @@ const Sidebar = () => {
               <ListItemIcon sx={{ color: isActive('/profile') ? '#7152F3' : '' }}>
                 <AccountBoxIcon />
               </ListItemIcon>
-              <ListItemText primary="Profile" />
+              <ListItemText primary={user ? user.Name : 'Profile'} />
             </StyledListItem>
           </List>
         </Box>
