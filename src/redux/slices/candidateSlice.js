@@ -60,6 +60,17 @@ const candidateSlice = createSlice({
       .addCase(fetchCandidatesByFilters.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload ? action.payload.error : action.error.message;
+      })
+      .addCase(fetchArchivedCandidatesByFilters.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchArchivedCandidatesByFilters.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.candidates = action.payload;
+      })
+      .addCase(fetchArchivedCandidatesByFilters.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload ? action.payload.error : action.error.message;
       });
   },
 });
