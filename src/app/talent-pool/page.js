@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
 import { fetchPositions } from '@/redux/slices/positionSlice';
 import { fetchCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/candidateSlice';
-import { editPosition, archivePosition } from '@/services/api';
+import { editPosition, archivePosition, createCandidate } from '@/services/api'; // Update this line to include createCandidate
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
 
@@ -21,6 +21,7 @@ const TalentPool = () => {
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
+  const [selectedDomicile, setSelectedDomicile] = useState('');
   const [positions, setPositions] = useState([]);
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -31,6 +32,12 @@ const TalentPool = () => {
     qualification: '',
   });
   const [file, setFile] = useState(null);
+  const [newCandidateData, setNewCandidateData] = useState({
+    name: '',
+    email: '',
+    domicile: '',
+    positionId: '',
+  });
 
   const departments = useSelector((state) => state.departments.departments);
   const allPositions = useSelector((state) => state.positions.positions);
@@ -87,6 +94,12 @@ const TalentPool = () => {
 
   const handlePositionChange = (event) => {
     setSelectedPosition(event.target.value);
+    setNewCandidateData({ ...newCandidateData, positionId: event.target.value });
+  };
+
+  const handleDomicileChange = (event) => {
+    setSelectedDomicile(event.target.value);
+    setNewCandidateData({ ...newCandidateData, domicile: event.target.value });
   };
 
   const handleEditClick = () => {
@@ -146,6 +159,38 @@ const TalentPool = () => {
     }
   };
 
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
+
+  const handleNewCandidateChange = (event) => {
+    const { name, value } = event.target;
+    setNewCandidateData({
+      ...newCandidateData,
+      [name]: value,
+    });
+  };
+
+  const handleNewCandidateSubmit = async () => {
+    const formData = new FormData();
+    formData.append('name', newCandidateData.name);
+    formData.append('email', newCandidateData.email);
+    formData.append('domicile', newCandidateData.domicile);
+    formData.append('positionId', newCandidateData.positionId);
+    if (file) {
+      formData.append('cv_file', file);
+    }
+
+    try {
+      await createCandidate(formData);
+      dispatch(fetchAllCandidates());
+      handleDialogClose();
+    } catch (error) {
+      console.error('Failed to create candidate:', error);
+      alert(error.response.data.message || 'An error occurred. Please try again.');
+    }
+  };
+
   const getDepartmentName = (departmentId) => {
     const department = departments.find(dep => dep.ID === departmentId);
     return department ? department.Name : '';
@@ -168,11 +213,16 @@ const TalentPool = () => {
     setFile(acceptedFiles[0]);
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: 'image/jpeg, application/pdf' });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: 'application/pdf' });
 
-  const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
-  };
+  const regions = [
+    "Aceh", "Bali", "Banten", "Bengkulu", "DI Yogyakarta", "DKI Jakarta", "Gorontalo",
+    "Jambi", "Jawa Barat", "Jawa Tengah", "Jawa Timur", "Kalimantan Barat", "Kalimantan Selatan",
+    "Kalimantan Tengah", "Kalimantan Timur", "Kalimantan Utara", "Kepulauan Bangka Belitung",
+    "Kepulauan Riau", "Lampung", "Maluku", "Maluku Utara", "Nusa Tenggara Barat", "Nusa Tenggara Timur",
+    "Papua", "Papua Barat", "Riau", "Sulawesi Barat", "Sulawesi Selatan", "Sulawesi Tengah", "Sulawesi Tenggara",
+    "Sulawesi Utara", "Sumatera Barat", "Sumatera Selatan", "Sumatera Utara"
+  ];
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -256,12 +306,18 @@ const TalentPool = () => {
             label="Full Name"
             fullWidth
             variant="outlined"
+            name="name"
+            value={newCandidateData.name}
+            onChange={handleNewCandidateChange}
           />
           <TextField
             margin="dense"
             label="Email Address"
             fullWidth
             variant="outlined"
+            name="email"
+            value={newCandidateData.email}
+            onChange={handleNewCandidateChange}
           />
           <TextField
             margin="dense"
@@ -296,10 +352,20 @@ const TalentPool = () => {
           </TextField>
           <TextField
             margin="dense"
+            select
             label="Domicile"
             fullWidth
             variant="outlined"
-          />
+            name="domicile"
+            value={selectedDomicile}
+            onChange={handleDomicileChange}
+          >
+            {regions.map((region, index) => (
+              <MenuItem key={index} value={region}>
+                {region}
+              </MenuItem>
+            ))}
+          </TextField>
           <Box
             {...getRootProps()}
             sx={{
@@ -317,7 +383,7 @@ const TalentPool = () => {
         </DialogContent>
         <DialogActions sx={{ mr: 2 }}>
           <Button onClick={handleDialogClose}>Cancel</Button>
-          <Button variant="contained">Create Candidate</Button>
+          <Button variant="contained" onClick={handleNewCandidateSubmit}>Create Candidate</Button>
         </DialogActions>
       </Dialog>
       <Dialog open={openEditDialog} onClose={handleEditDialogClose}>

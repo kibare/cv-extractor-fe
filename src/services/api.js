@@ -81,3 +81,12 @@ export const getUserData = async () => {
   const response = await apiClient.get('/api/user/get-user');
   return response.data
 };
+
+export const createCandidate = async (data) => {
+  const response = await apiClient.post('/api/candidate/create-candidate', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+};
