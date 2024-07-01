@@ -1,8 +1,13 @@
 "use client";
 
-import React from 'react';
-import { Container, Typography, Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Container, Typography, Box, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Chip } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDepartments } from '@/redux/slices/departmentSlice';
+import { fetchPositions } from '@/redux/slices/positionSlice';
+import { fetchAllCandidates } from '@/redux/slices/candidateSlice';
+import Link from 'next/link';
 
 const Content = styled('main')(({ theme }) => ({
   flexGrow: 1,
@@ -11,6 +16,33 @@ const Content = styled('main')(({ theme }) => ({
 }));
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
+  const departments = useSelector((state) => state.departments.departments);
+  const positions = useSelector((state) => state.positions.positions);
+  const candidates = useSelector((state) => state.candidates.candidates);
+
+  useEffect(() => {
+    dispatch(fetchDepartments());
+    dispatch(fetchPositions());
+    dispatch(fetchAllCandidates());
+  }, [dispatch]);
+
+  const getDepartmentName = (departmentId) => {
+    const department = departments.find(dep => dep.ID === departmentId);
+    return department ? department.Name : '';
+  };
+
+  const getCandidatesCount = (positionId) => {
+    return candidates.filter(candidate => candidate.PositionID === positionId).length;
+  };
+
+  const getQualifiedCandidatesCount = (positionId) => {
+    return candidates.filter(candidate => candidate.PositionID === positionId && candidate.IsQualified).length;
+  };
+
+  const recentPositions = positions.slice(0, 5);
+  const recentCandidates = candidates.slice(0, 5);
+
   return (
     <Box sx={{ display: 'flex' }}>
       <Content>
@@ -21,25 +53,25 @@ const Dashboard = () => {
             <Grid item xs={12} md={3}>
               <Paper elevation={3} sx={{ padding: 2, height: '100%' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Candidates</Typography>
-                <Typography variant="h4" sx={{ my: 2, fontWeight: 'bold' }}>560</Typography>
+                <Typography variant="h4" sx={{ my: 2, fontWeight: 'bold' }}>{candidates.length}</Typography>
               </Paper>
             </Grid>
             <Grid item xs={12} md={3}>
               <Paper elevation={3} sx={{ padding: 2, height: '100%' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Department</Typography>
-                <Typography variant="h4" sx={{ my: 2, fontWeight: 'bold' }}>1050</Typography>
+                <Typography variant="h4" sx={{ my: 2, fontWeight: 'bold' }}>{departments.length}</Typography>
               </Paper>
             </Grid>
             <Grid item xs={12} md={3}>
               <Paper elevation={3} sx={{ padding: 2, height: '100%' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Position</Typography>
-                <Typography variant="h4" sx={{ my: 2, fontWeight: 'bold' }}>470</Typography>
+                <Typography variant="h4" sx={{ my: 2, fontWeight: 'bold' }}>{positions.length}</Typography>
               </Paper>
             </Grid>
             <Grid item xs={12} md={3}>
               <Paper elevation={3} sx={{ padding: 2, height: '100%' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Qualified Candidates</Typography>
-                <Typography variant="h4" sx={{ my: 2, fontWeight: 'bold' }}>250</Typography>
+                <Typography variant="h4" sx={{ my: 2, fontWeight: 'bold' }}>{candidates.filter(c => c.IsQualified).length}</Typography>
               </Paper>
             </Grid>
           </Grid>
@@ -49,7 +81,9 @@ const Dashboard = () => {
               <Paper elevation={3} sx={{ padding: 2, height: '100%' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Positions Overview</Typography>
-                  <Button variant="outlined" size="small" >View All</Button>
+                  <Link href="/positions" passHref>
+                    <Button variant="outlined" size="small">View All</Button>
+                  </Link>
                 </Box>
                 <TableContainer>
                   <Table>
@@ -57,17 +91,19 @@ const Dashboard = () => {
                       <TableRow>
                         <TableCell>Department</TableCell>
                         <TableCell>Position</TableCell>
-                        <TableCell>Status</TableCell>
+                        <TableCell>Candidates</TableCell>
+                        <TableCell>Qualified Candidates</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {/* Add your rows here */}
-                      <TableRow>
-                        <TableCell>Marketing</TableCell>
-                        <TableCell>Team Lead - Design</TableCell>
-                        <TableCell>Open</TableCell>
-                      </TableRow>
-                      {/* Add more rows as needed */}
+                      {recentPositions.map((position) => (
+                        <TableRow key={position.ID}>
+                          <TableCell>{getDepartmentName(position.DepartmentID)}</TableCell>
+                          <TableCell>{position.Name}</TableCell>
+                          <TableCell>{getCandidatesCount(position.ID)}</TableCell>
+                          <TableCell>{getQualifiedCandidatesCount(position.ID)}</TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
@@ -80,7 +116,9 @@ const Dashboard = () => {
               <Paper elevation={3} sx={{ padding: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Candidates Overview</Typography>
-                  <Button variant="outlined" size="small">View All</Button>
+                  <Link href="/talent-pool" passHref>
+                    <Button variant="outlined" size="small">View All</Button>
+                  </Link>
                 </Box>
                 <TableContainer>
                   <Table>
@@ -94,22 +132,17 @@ const Dashboard = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {/* Add your rows here */}
-                      <TableRow>
-                        <TableCell>Leasie Watson</TableCell>
-                        <TableCell>Team Lead - Design</TableCell>
-                        <TableCell>Finance</TableCell>
-                        <TableCell>90</TableCell>
-                        <TableCell sx={{ color: 'success.main' }}>Qualified</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Darlene Robertson</TableCell>
-                        <TableCell>Web Designer</TableCell>
-                        <TableCell>Tech</TableCell>
-                        <TableCell>85</TableCell>
-                        <TableCell sx={{ color: 'error.main' }}>Not Qualified</TableCell>
-                      </TableRow>
-                      {/* Add more rows as needed */}
+                      {recentCandidates.map((candidate) => (
+                        <TableRow key={candidate.ID}>
+                          <TableCell>{candidate.Name}</TableCell>
+                          <TableCell>{candidate.Position.Name}</TableCell>
+                          <TableCell>{getDepartmentName(candidate.Position.DepartmentID)}</TableCell>
+                          <TableCell>{candidate.Score}</TableCell>
+                          <TableCell sx={{ color: candidate.IsQualified ? 'success.main' : 'error.main' }}>
+                            <Chip label={candidate.IsQualified ? 'Qualified' : 'Not Qualified'} color={candidate.IsQualified ?  "success" : "error"} variant='outlined'></Chip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </TableContainer>

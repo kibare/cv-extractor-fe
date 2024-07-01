@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Typography, Box, Grid, Paper, Button, TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import { useDropzone } from 'react-dropzone';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
 import { fetchPositions } from '@/redux/slices/positionSlice';
@@ -16,11 +18,11 @@ const TalentPool = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
-  const [openEditDialog, setOpenEditDialog] = useState(false); 
+  const [openEditDialog, setOpenEditDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
   const [positions, setPositions] = useState([]);
-  const [editFormData, setEditFormData] = useState({ 
+  const [editFormData, setEditFormData] = useState({
     name: '',
     education: '',
     location: '',
@@ -28,6 +30,8 @@ const TalentPool = () => {
     description: '',
     qualification: '',
   });
+  const [file, setFile] = useState(null);
+
   const departments = useSelector((state) => state.departments.departments);
   const allPositions = useSelector((state) => state.positions.positions);
   const candidates = useSelector((state) => state.candidates.candidates);
@@ -78,7 +82,7 @@ const TalentPool = () => {
 
   const handleDepartmentChange = (event) => {
     setSelectedDepartment(event.target.value);
-    setSelectedPosition(''); 
+    setSelectedPosition('');
   };
 
   const handlePositionChange = (event) => {
@@ -115,7 +119,7 @@ const TalentPool = () => {
   const handleEditFormSubmit = async (event) => {
     event.preventDefault();
     try {
-      await editPosition(selectedPosition, editFormData); 
+      await editPosition(selectedPosition, editFormData);
       dispatch(fetchPositions());
       const filters = {
         departmentId: selectedDepartment ? parseInt(selectedDepartment) : 0,
@@ -160,6 +164,16 @@ const TalentPool = () => {
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.length - page * rowsPerPage);
 
+  const onDrop = useCallback((acceptedFiles) => {
+    setFile(acceptedFiles[0]);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: 'image/jpeg, application/pdf' });
+
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
+
   return (
     <Box sx={{ display: 'flex' }}>
       <Box sx={{ flexGrow: 1, p: 3 }}>
@@ -197,10 +211,10 @@ const TalentPool = () => {
                   </MenuItem>
                 ))}
               </TextField>
-              <Button 
-                variant="contained" 
-                sx={{ mr: 2 }} 
-                onClick={handleEditClick} 
+              <Button
+                variant="contained"
+                sx={{ mr: 2 }}
+                onClick={handleEditClick}
                 disabled={!selectedDepartment || !selectedPosition}
               >
                 EDIT POSITION
@@ -286,9 +300,19 @@ const TalentPool = () => {
             fullWidth
             variant="outlined"
           />
-          <Box sx={{ mt: 2, mb: 2, border: '1px dashed grey', padding: 2, textAlign: 'center' }}>
-            <Typography>Drag & Drop or choose file to upload</Typography>
-            <Typography variant="caption" display="block">Supported formats: Jpeg, pdf</Typography>
+          <Box
+            {...getRootProps()}
+            sx={{
+              mt: 2, mb: 2, border: '1px dashed grey', padding: 2, textAlign: 'center',
+              backgroundColor: isDragActive ? 'lightgrey' : 'inherit',
+              cursor: 'pointer'
+            }}
+          >
+            <input {...getInputProps()} onChange={handleFileChange} />
+            <InsertDriveFileIcon sx={{ fontSize: 40, mb: 1 }} />
+            <Typography>Drag & Drop or click to choose file to upload</Typography>
+            <Typography variant="caption" display="block">Supported formats: pdf</Typography>
+            {file && <Typography variant="caption" display="block">Selected file: {file.name}</Typography>}
           </Box>
         </DialogContent>
         <DialogActions sx={{ mr: 2 }}>
