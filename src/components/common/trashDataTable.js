@@ -1,8 +1,10 @@
+// src/components/common/TrashDataTable.js
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, TablePagination, Menu, MenuItem } from '@mui/material';
 import { MoreHorizRounded } from '@mui/icons-material';
 
-const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage }) => {
+const TrashDataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
@@ -26,33 +28,28 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
     handleClose();
   };
 
-  const handleQualification = () => {
-    console.log(selectedRow.qualified === 'Qualified' ? 'Remove Qualification for' : 'Qualify', selectedRow);
-    handleClose();
-  };
-
   return (
     <>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
               <TableCell>Position</TableCell>
               <TableCell>Department</TableCell>
-              <TableCell>Score</TableCell>
-              <TableCell>Qualified</TableCell>
+              <TableCell>Candidates</TableCell>
+              <TableCell>Qualified Candidate</TableCell>
+              <TableCell>Removed Date</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
               <TableRow key={row.id}>
-                <TableCell>{row.name}</TableCell>
                 <TableCell>{row.position}</TableCell>
                 <TableCell>{row.department}</TableCell>
-                <TableCell>{row.score}</TableCell>
-                <TableCell>{row.qualified}</TableCell>
+                <TableCell>{row.candidateCount}</TableCell>
+                <TableCell>{row.qualifiedCandidateCount}</TableCell>
+                <TableCell>{new Date(row.removedDate).toLocaleString()}</TableCell>
                 <TableCell>
                   <IconButton onClick={(event) => handleClick(event, row)}>
                     <MoreHorizRounded />
@@ -62,11 +59,8 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
                     open={Boolean(anchorEl)}
                     onClose={handleClose}
                   >
-                    <MenuItem onClick={handleViewCV}>Lihat CV Candidate</MenuItem>
-                    <MenuItem onClick={handleEdit}>Edit Candidate</MenuItem>
-                    <MenuItem onClick={handleQualification}>
-                      {selectedRow?.qualified === 'Qualified' ? 'Hapus Kualifikasi' : 'Kualifikasi Candidate'}
-                    </MenuItem>
+                    <MenuItem onClick={handleViewCV}>Resolved Position</MenuItem>
+                    <MenuItem onClick={handleEdit}>Deleted Permanently</MenuItem>
                   </Menu>
                 </TableCell>
               </TableRow>
@@ -92,4 +86,4 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
   );
 };
 
-export default DataTable;
+export default TrashDataTable;

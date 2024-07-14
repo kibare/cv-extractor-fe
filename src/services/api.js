@@ -72,6 +72,11 @@ export const archivePosition = async (id) => {
   return response.data;
 };
 
+export const trashPosition = async (id) => {
+  const response = await apiClient.put(`/api/position/trash-position/${id}`);
+  return response.data;
+};
+
 export const fetchArchivedPositions = async () => {
   const response = await apiClient.get('/api/position/get-archived-positions');
   return response.data;

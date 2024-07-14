@@ -1,3 +1,5 @@
+// src/app/talent-pool/page.js
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -8,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
 import { fetchPositions } from '@/redux/slices/positionSlice';
 import { fetchCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/candidateSlice';
-import { editPosition, archivePosition, createCandidate } from '@/services/api'; // Update this line to include createCandidate
+import { editPosition, archivePosition, createCandidate, trashPosition } from '@/services/api'; // Add trashPosition
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
 
@@ -159,6 +161,19 @@ const TalentPool = () => {
     }
   };
 
+  const handleDeleteClick = async () => {
+    if (selectedPosition) {
+      try {
+        await trashPosition(selectedPosition);
+        dispatch(fetchPositions());
+        setSelectedPosition('');
+      } catch (error) {
+        console.error('Failed to trash position:', error);
+        alert(error.response.data.message || 'An error occurred. Please try again.');
+      }
+    }
+  }
+
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
@@ -196,7 +211,7 @@ const TalentPool = () => {
     return department ? department.Name : '';
   };
 
-  const activeCandidates = candidates.filter(candidate => !candidate.Position.IsArchive);
+  const activeCandidates = candidates.filter(candidate => !candidate.Position.IsArchive && !candidate.Position.IsTrash);
 
   const data = activeCandidates.map(candidate => ({
     id: candidate.ID,
@@ -228,10 +243,10 @@ const TalentPool = () => {
     <Box sx={{ display: 'flex' }}>
       <Box sx={{ flexGrow: 1, p: 3 }}>
         <Container component="main" maxWidth="lg">
-          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>Talent Pool</Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>Get The Best Candidate!</Typography>
+        <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>Talent Pool</Typography>
+        <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4 }}>Get The Best Candidate!</Typography>
           <Grid container spacing={2} sx={{ mb: 4 }}>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 select
@@ -269,17 +284,20 @@ const TalentPool = () => {
               >
                 EDIT POSITION
               </Button>
-              <Button variant="outlined" onClick={handleArchiveClick} disabled={!selectedDepartment || !selectedPosition}>
+              <Button variant="outlined" sx={{ mr: 2 }} onClick={handleArchiveClick}  disabled={!selectedDepartment || !selectedPosition}>
                 CLOSE POSITION
               </Button>
+              <Button variant="outlined" onClick={handleDeleteClick} disabled={!selectedDepartment || !selectedPosition}>
+                TRASH POSITION
+              </Button>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <Paper elevation={3} sx={{ padding: 2, height: 'auto' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Candidates</Typography>
                 <Typography variant="h4" sx={{ my: 1.5, fontWeight: 'bold' }}>{activeCandidates.length}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <Paper elevation={3} sx={{ padding: 2, height: 'auto' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Qualified Candidate</Typography>
                 <Typography variant="h4" sx={{ my: 1.5, fontWeight: 'bold' }}>{activeCandidates.filter(c => c.IsQualified).length}</Typography>

@@ -64,6 +64,7 @@ const Sidebar = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openChangePasswordDialog, setOpenChangePasswordDialog] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const user = useSelector((state) => state.user.user); // Assuming you have a user slice and state
 
@@ -90,8 +91,14 @@ const Sidebar = () => {
     setOpenDialog(true);
   };
 
+  const handleChangePassword = () => {
+    handleMenuClose();
+    setOpenChangePasswordDialog(true);
+  };
+
   const handleDialogClose = () => {
     setOpenDialog(false);
+    setOpenChangePasswordDialog(false);
   };
 
   const handleLogout = () => {
@@ -224,6 +231,7 @@ const Sidebar = () => {
           }}
         >
           <MenuItem onClick={handleEditProfile}>Edit Profile</MenuItem>
+          <MenuItem onClick={handleChangePassword}>Change Password</MenuItem>
           <MenuItem onClick={handleLogout}>Log Out</MenuItem>
         </Menu>
         <Dialog open={openDialog} onClose={handleDialogClose}>
@@ -248,9 +256,25 @@ const Sidebar = () => {
               fullWidth
               variant="outlined"
             />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDialogClose}>Cancel</Button>
+            <Button onClick={handleDialogClose} variant="contained">Edit</Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={openChangePasswordDialog} onClose={handleChangePassword}>
+          <DialogTitle>Change Password</DialogTitle>
+          <DialogContent>
             <TextField
               margin="dense"
-              label="Enter Your Password"
+              label="Enter Your New Password"
+              fullWidth
+              variant="outlined"
+              type="password"
+            />
+            <TextField
+              margin="dense"
+              label="Confirm Your Password"
               fullWidth
               variant="outlined"
               type="password"
