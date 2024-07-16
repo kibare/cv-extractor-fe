@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, TablePagination, Menu, MenuItem } from '@mui/material';
 import { MoreHorizRounded } from '@mui/icons-material';
 
-const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage }) => {
+const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage, onViewCV }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
@@ -17,7 +17,9 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
   };
 
   const handleViewCV = () => {
-    console.log('View CV for', selectedRow);
+    if (selectedRow) {
+      onViewCV(selectedRow.id);
+    }
     handleClose();
   };
 

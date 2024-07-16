@@ -104,6 +104,11 @@ export const createCandidate = async (data) => {
   return response.data;
 };
 
+export const getCandidateDetails = async (id) => {
+  const response = await apiClient.get(`/api/candidate/get-one-candidate/${id}`)
+  return response.data;
+}
+
 export const updateUserProfile = async (profileData) => {
   const response = await apiClient.put('/api/user/edit-user', profileData);
   return response.data;

@@ -1,5 +1,3 @@
-// src/app/talent-pool/page.js
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -10,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
 import { fetchPositions } from '@/redux/slices/positionSlice';
 import { fetchCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/candidateSlice';
-import { editPosition, archivePosition, createCandidate, trashPosition } from '@/services/api'; // Add trashPosition
+import { editPosition, archivePosition, createCandidate, trashPosition, getCandidateDetails } from '@/services/api'; // Add getCandidateDetails
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
 
@@ -21,6 +19,8 @@ const TalentPool = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openCVDialog, setOpenCVDialog] = useState(false); // Add state for CV dialog
+  const [cvUrl, setCVUrl] = useState(''); // Add state for CV URL
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
   const [selectedDomicile, setSelectedDomicile] = useState('');
@@ -230,6 +230,22 @@ const TalentPool = () => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: 'application/pdf' });
 
+  const handleViewCV = async (candidateId) => {
+    try {
+      const response = await getCandidateDetails(candidateId);
+      setCVUrl(response.CVFile);
+      setOpenCVDialog(true);
+    } catch (error) {
+      console.error('Failed to fetch candidate details:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
+  const handleCVDialogClose = () => {
+    setOpenCVDialog(false);
+    setCVUrl('');
+  };
+
   const regions = [
     "Aceh", "Bali", "Banten", "Bengkulu", "DI Yogyakarta", "DKI Jakarta", "Gorontalo",
     "Jambi", "Jawa Barat", "Jawa Tengah", "Jawa Timur", "Kalimantan Barat", "Kalimantan Selatan",
@@ -312,6 +328,7 @@ const TalentPool = () => {
             emptyRows={emptyRows}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
+            onViewCV={handleViewCV} // Add onViewCV prop
           />
         </Container>
       </Box>
@@ -467,6 +484,15 @@ const TalentPool = () => {
         <DialogActions>
           <Button onClick={handleEditDialogClose}>Cancel</Button>
           <Button onClick={handleEditFormSubmit} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={openCVDialog} onClose={handleCVDialogClose} maxWidth="xl" fullWidth>
+        <DialogTitle>View CV</DialogTitle>
+        <DialogContent>
+          <iframe src={cvUrl} width="100%" height="1000px" title="CV Preview" />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCVDialogClose}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
