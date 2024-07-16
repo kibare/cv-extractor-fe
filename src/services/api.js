@@ -45,6 +45,16 @@ export const getAllPositions = async () => {
   return response.data;
 };
 
+export const getPositionDetails = async (id) => {
+  const response = await apiClient.get(`/api/position/get-one-position/${id}`);
+  return response.data;
+};
+
+export const getCandidatesByPositionId = async (positionId) => {
+  const response = await apiClient.get(`/api/candidate/get-candidates-by-position/${positionId}`);
+  return response.data;
+};
+
 export const editPosition = async (id, data) => {
   const response = await apiClient.put(`/api/position/edit-position/${id}`, data);
   return response.data;
