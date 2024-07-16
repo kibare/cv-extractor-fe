@@ -1,5 +1,3 @@
-// src/services/api.js
-
 import apiClient from './apiClient';
 
 export const login = async (credentials) => {
@@ -47,7 +45,7 @@ export const getAllPositions = async () => {
   return response.data;
 };
 
-export const editPosition = async (id, data) => { // Fungsi untuk mengedit posisi
+export const editPosition = async (id, data) => {
   const response = await apiClient.put(`/api/position/edit-position/${id}`, data);
   return response.data;
 };
@@ -63,9 +61,9 @@ export const getCandidatesByFilters = async (filters) => {
 };
 
 export const getArchivedCandidatesByFilters = async (filters) => {
-  const response = await apiClient.post('/api/candidate/get-archived-candidates-by-filters', filters)
+  const response = await apiClient.post('/api/candidate/get-archived-candidates-by-filters', filters);
   return response.data;
-}
+};
 
 export const archivePosition = async (id) => {
   const response = await apiClient.put(`/api/position/archive-position/${id}`);
@@ -84,14 +82,24 @@ export const fetchArchivedPositions = async () => {
 
 export const getUserData = async () => {
   const response = await apiClient.get('/api/user/get-user');
-  return response.data
+  return response.data;
 };
 
 export const createCandidate = async (data) => {
   const response = await apiClient.post('/api/candidate/create-candidate', data, {
     headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+      'Content-Type': 'multipart/form-data',
+    },
   });
+  return response.data;
+};
+
+export const updateUserProfile = async (profileData) => {
+  const response = await apiClient.put('/api/user/edit-user', profileData);
+  return response.data;
+};
+
+export const changeUserPassword = async (passwordData) => {
+  const response = await apiClient.put('/api/user/change-password', passwordData);
   return response.data;
 };

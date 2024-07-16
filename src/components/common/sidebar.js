@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '@/redux/slices/authSlice';
 import { fetchUserData } from '@/redux/slices/userSlice'; // Assuming you have a slice to fetch user data
+import { updateUserProfile, changeUserPassword } from '@/services/api'; // Import API functions for updating user profile and changing password
 import { Typography, List, ListItem, ListItemIcon, ListItemText, Box, Menu, MenuItem, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Button, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -66,11 +67,19 @@ const Sidebar = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [openChangePasswordDialog, setOpenChangePasswordDialog] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [editProfileData, setEditProfileData] = useState({ name: '', email: '', phone: '' });
+  const [changePasswordData, setChangePasswordData] = useState({ password: '', confirmPassword: '' });
   const user = useSelector((state) => state.user.user); // Assuming you have a user slice and state
 
   useEffect(() => {
     dispatch(fetchUserData()); // Fetch user data after component mounts
   }, [dispatch]);
+
+  useEffect(() => {
+    if (user) {
+      setEditProfileData({ name: user.Name, email: user.Email, phone: user.Phone });
+    }
+  }, [user]);
 
   const handleNavigation = (path) => {
     router.push(path);
@@ -111,6 +120,41 @@ const Sidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditProfileData({ ...editProfileData, [name]: value });
+  };
+
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setChangePasswordData({ ...changePasswordData, [name]: value });
+  };
+
+  const handleProfileUpdate = async () => {
+    try {
+      await updateUserProfile(editProfileData);
+      dispatch(fetchUserData());
+      handleDialogClose();
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      alert(error.response.data.message || 'An error occurred. Please try again.');
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (changePasswordData.password !== changePasswordData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    try {
+      await changeUserPassword({ password: changePasswordData.password });
+      handleDialogClose();
+    } catch (error) {
+      console.error('Failed to change password:', error);
+      alert(error.response.data.message || 'An error occurred. Please try again.');
+    }
+  };
+
   return (
     <Box sx={{ position: 'relative' }}>
       {!sidebarOpen && (
@@ -119,20 +163,20 @@ const Sidebar = () => {
         </SidebarToggle>
       )}
       <SidebarContainer open={sidebarOpen}>
-          <Header>
-            <Typography variant="h6" sx={{ textAlign: 'left', fontWeight: 'bold' }}>CV Extractor</Typography>
-            <IconButton onClick={toggleSidebar}>
-              <CloseIcon />
-            </IconButton>
-          </Header>
+        <Header>
+          <Typography variant="h6" sx={{ textAlign: 'left', fontWeight: 'bold' }}>CV Extractor</Typography>
+          <IconButton onClick={toggleSidebar}>
+            <CloseIcon />
+          </IconButton>
+        </Header>
         <SidebarContent>
           <List>
-            <StyledListItem 
-              button 
-              onClick={() => handleNavigation('/')} 
-              sx={{ 
-                backgroundColor: isActive('/') ? '#F3F1F9' : 'inherit', 
-                borderLeft: isActive('/') ? '3px solid #7152F2' : 'none', 
+            <StyledListItem
+              button
+              onClick={() => handleNavigation('/')}
+              sx={{
+                backgroundColor: isActive('/') ? '#F3F1F9' : 'inherit',
+                borderLeft: isActive('/') ? '3px solid #7152F2' : 'none',
                 color: isActive('/') ? '#7152F3' : ''
               }}
             >
@@ -141,12 +185,12 @@ const Sidebar = () => {
               </ListItemIcon>
               <ListItemText primary="Dashboard" />
             </StyledListItem>
-            <StyledListItem 
-              button 
-              onClick={() => handleNavigation('/talent-pool')} 
-              sx={{ 
-                backgroundColor: isActive('/talent-pool') ? '#F3F1F9' : 'inherit', 
-                borderLeft: isActive('/talent-pool') ? '3px solid #7152F2' : 'none', 
+            <StyledListItem
+              button
+              onClick={() => handleNavigation('/talent-pool')}
+              sx={{
+                backgroundColor: isActive('/talent-pool') ? '#F3F1F9' : 'inherit',
+                borderLeft: isActive('/talent-pool') ? '3px solid #7152F2' : 'none',
                 color: isActive('/talent-pool') ? '#7152F3' : ''
               }}
             >
@@ -155,12 +199,12 @@ const Sidebar = () => {
               </ListItemIcon>
               <ListItemText primary="Talent Pool" />
             </StyledListItem>
-            <StyledListItem 
-              button 
-              onClick={() => handleNavigation('/positions')} 
-              sx={{ 
-                backgroundColor: isActive('/positions') ? '#F3F1F9' : 'inherit', 
-                borderLeft: isActive('/positions') ? '3px solid #7152F2' : 'none', 
+            <StyledListItem
+              button
+              onClick={() => handleNavigation('/positions')}
+              sx={{
+                backgroundColor: isActive('/positions') ? '#F3F1F9' : 'inherit',
+                borderLeft: isActive('/positions') ? '3px solid #7152F2' : 'none',
                 color: isActive('/positions') ? '#7152F3' : ''
               }}
             >
@@ -169,12 +213,12 @@ const Sidebar = () => {
               </ListItemIcon>
               <ListItemText primary="Positions" />
             </StyledListItem>
-            <StyledListItem 
-              button 
-              onClick={() => handleNavigation('/archive')} 
-              sx={{ 
-                backgroundColor: isActive('/archive') ? '#F3F1F9' : 'inherit', 
-                borderLeft: isActive('/archive') ? '3px solid #7152F2' : 'none', 
+            <StyledListItem
+              button
+              onClick={() => handleNavigation('/archive')}
+              sx={{
+                backgroundColor: isActive('/archive') ? '#F3F1F9' : 'inherit',
+                borderLeft: isActive('/archive') ? '3px solid #7152F2' : 'none',
                 color: isActive('/archive') ? '#7152F3' : ''
               }}
             >
@@ -183,12 +227,12 @@ const Sidebar = () => {
               </ListItemIcon>
               <ListItemText primary="Archive" />
             </StyledListItem>
-            <StyledListItem 
-              button 
-              onClick={() => handleNavigation('/trash')} 
-              sx={{ 
-                backgroundColor: isActive('/trash') ? '#F3F1F9' : 'inherit', 
-                borderLeft: isActive('/trash') ? '3px solid #7152F2' : 'none', 
+            <StyledListItem
+              button
+              onClick={() => handleNavigation('/trash')}
+              sx={{
+                backgroundColor: isActive('/trash') ? '#F3F1F9' : 'inherit',
+                borderLeft: isActive('/trash') ? '3px solid #7152F2' : 'none',
                 color: isActive('/trash') ? '#7152F3' : ''
               }}
             >
@@ -201,12 +245,12 @@ const Sidebar = () => {
         </SidebarContent>
         <Box sx={{ mt: 'auto' }}>
           <List>
-            <StyledListItem 
-              button 
-              onClick={handleProfileClick} 
-              sx={{ 
-                backgroundColor: isActive('/profile') ? '#F3F1F9' : 'inherit', 
-                borderLeft: isActive('/profile') ? '3px solid #7152F2' : 'none', 
+            <StyledListItem
+              button
+              onClick={handleProfileClick}
+              sx={{
+                backgroundColor: isActive('/profile') ? '#F3F1F9' : 'inherit',
+                borderLeft: isActive('/profile') ? '3px solid #7152F2' : 'none',
                 color: isActive('/profile') ? '#7152F3' : ''
               }}
             >
@@ -241,25 +285,34 @@ const Sidebar = () => {
               autoFocus
               margin="dense"
               label="Enter Your Name"
+              name="name"
               fullWidth
               variant="outlined"
+              value={editProfileData.name}
+              onChange={handleProfileInputChange}
             />
             <TextField
               margin="dense"
               label="Enter Your Email"
+              name="email"
               fullWidth
               variant="outlined"
+              value={editProfileData.email}
+              onChange={handleProfileInputChange}
             />
             <TextField
               margin="dense"
               label="Enter Your Phone"
+              name="phone"
               fullWidth
               variant="outlined"
+              value={editProfileData.phone}
+              onChange={handleProfileInputChange}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button onClick={handleDialogClose} variant="contained">Edit</Button>
+            <Button onClick={handleProfileUpdate} variant="contained">Save</Button>
           </DialogActions>
         </Dialog>
         <Dialog open={openChangePasswordDialog} onClose={handleChangePassword}>
@@ -268,21 +321,27 @@ const Sidebar = () => {
             <TextField
               margin="dense"
               label="Enter Your New Password"
+              name="password"
               fullWidth
               variant="outlined"
               type="password"
+              value={changePasswordData.password}
+              onChange={handlePasswordInputChange}
             />
             <TextField
               margin="dense"
               label="Confirm Your Password"
+              name="confirmPassword"
               fullWidth
               variant="outlined"
               type="password"
+              value={changePasswordData.confirmPassword}
+              onChange={handlePasswordInputChange}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleDialogClose}>Cancel</Button>
-            <Button onClick={handleDialogClose} variant="contained">Edit</Button>
+            <Button onClick={handlePasswordChange} variant="contained">Save</Button>
           </DialogActions>
         </Dialog>
       </SidebarContainer>
