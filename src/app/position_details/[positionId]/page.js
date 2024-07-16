@@ -3,21 +3,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Typography, Box, Grid, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem } from '@mui/material';
 import { Work, Place, School, People } from '@mui/icons-material';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { getPositionDetails, getCandidatesByPositionId, editPosition, archivePosition, createCandidate, trashPosition } from '@/services/api';
 import DataTable from '@/components/common/dataTable';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { useDropzone } from 'react-dropzone';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
-import { fetchPositions } from '@/redux/slices/positionSlice';
+import { fetchPositionDetails, fetchPositions } from '@/redux/slices/positionSlice';
 import { fetchAllCandidates } from '@/redux/slices/candidateSlice';
-import SearchBar from '@/components/common/searchBar'; // Assuming the SearchBar component is available
+import SearchBar from '@/components/common/searchBar';
 
 const PositionDetails = () => {
   const { positionId } = useParams();
+  const router = useRouter();
   const dispatch = useDispatch();
   const [position, setPosition] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -78,7 +80,6 @@ const PositionDetails = () => {
         const response = await getCandidatesByPositionId(positionId);
         setCandidates(response);
 
-        // Calculate the total number of candidates and qualified candidates
         const total = response.length;
         const qualified = response.filter(candidate => candidate.IsQualified).length;
         setTotalCandidates(total);
@@ -91,6 +92,7 @@ const PositionDetails = () => {
     dispatch(fetchDepartments());
     dispatch(fetchPositions());
     dispatch(fetchAllCandidates());
+    dispatch(fetchPositionDetails());
   }, [positionId, dispatch]);
 
   if (!position) {
@@ -157,7 +159,7 @@ const PositionDetails = () => {
   const handleArchiveClick = async () => {
     try {
       await archivePosition(positionId);
-      setPosition({ ...position, IsArchive: true });
+      router.push('/positions');
     } catch (error) {
       console.error('Failed to archive position:', error);
       alert(error.response.data.message || 'An error occurred. Please try again.');
@@ -167,7 +169,7 @@ const PositionDetails = () => {
   const handleDeleteClick = async () => {
     try {
       await trashPosition(positionId);
-      setPosition({ ...position, IsTrash: true });
+      router.push('/positions');
     } catch (error) {
       console.error('Failed to trash position:', error);
       alert(error.response.data.message || 'An error occurred. Please try again.');
@@ -184,6 +186,10 @@ const PositionDetails = () => {
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
   };
 
   const handleNewCandidateChange = (event) => {
@@ -313,6 +319,7 @@ const PositionDetails = () => {
 
         <Box>
           <Typography variant="h5" sx={{ mb: 2 }}>{position.Name} Candidates</Typography>
+          <SearchBar searchTerm={searchTerm} onSearchChange={handleSearchChange} onAddClick={handleAddClick} />
           <DataTable
             data={data}
             page={page}
@@ -322,8 +329,6 @@ const PositionDetails = () => {
             handleChangeRowsPerPage={handleChangeRowsPerPage}
           />
         </Box>
-
-        <Button variant="contained" sx={{ mt: 2 }} onClick={handleAddClick}>ADD NEW CANDIDATE</Button>
 
         <Dialog open={openDialog} onClose={handleCloseDialog}>
           <DialogTitle>Details</DialogTitle>
