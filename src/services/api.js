@@ -65,6 +65,11 @@ export const getAllCandidates = async () => {
   return response.data;
 };
 
+export const editCandidate = async (id, data) => {
+  const response = await apiClient.put(`/api/candidate/edit-candidate/${id}`, data);
+  return response.data;
+};
+
 export const getCandidatesByFilters = async (filters) => {
   const response = await apiClient.post('/api/candidate/get-candidates-by-filters', filters);
   return response.data;

@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
 import { fetchPositions } from '@/redux/slices/positionSlice';
 import { fetchCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/candidateSlice';
-import { editPosition, archivePosition, createCandidate, trashPosition, getCandidateDetails } from '@/services/api'; // Add getCandidateDetails
+import { editPosition, archivePosition, createCandidate, trashPosition, getCandidateDetails, editCandidate } from '@/services/api';
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
 
@@ -19,8 +19,9 @@ const TalentPool = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [openCVDialog, setOpenCVDialog] = useState(false); // Add state for CV dialog
-  const [cvUrl, setCVUrl] = useState(''); // Add state for CV URL
+  const [openEditCandidateDialog, setOpenEditCandidateDialog] = useState(false);
+  const [openCVDialog, setOpenCVDialog] = useState(false);
+  const [cvUrl, setCVUrl] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
   const [selectedDomicile, setSelectedDomicile] = useState('');
@@ -32,6 +33,14 @@ const TalentPool = () => {
     minWorkExp: '',
     description: '',
     qualification: '',
+  });
+  const [editCandidateData, setEditCandidateData] = useState({
+    id: '',
+    name: '',
+    email: '',
+    domicile: '',
+    positionId: '',
+    cvUrl: '', // Add cvUrl to state
   });
   const [file, setFile] = useState(null);
   const [newCandidateData, setNewCandidateData] = useState({
@@ -206,6 +215,51 @@ const TalentPool = () => {
     }
   };
 
+  const handleEditCandidateChange = (event) => {
+    const { name, value } = event.target;
+    setEditCandidateData({
+      ...editCandidateData,
+      [name]: value,
+    });
+  };
+
+  const handleEditCandidateClick = async (candidateId) => {
+    try {
+      const response = await getCandidateDetails(candidateId);
+      setEditCandidateData({
+        id: response.ID,
+        name: response.Name,
+        email: response.Email,
+        domicile: response.Domicile,
+        positionId: response.PositionID,
+      });
+      setSelectedDomicile(response.Domicile);
+      setSelectedDepartment('')
+      setSelectedPosition('')
+      setOpenEditCandidateDialog(true);
+    } catch (error) {
+      console.error('Failed to fetch candidate details:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
+  const handleEditCandidateSubmit = async () => {
+    const formData = new FormData();
+    formData.append('name', editCandidateData.name);
+    formData.append('email', editCandidateData.email);
+    formData.append('domicile', editCandidateData.domicile);
+    formData.append('positionId', editCandidateData.positionId);
+
+    try {
+      await editCandidate(editCandidateData.id, formData);
+      dispatch(fetchAllCandidates());
+      setOpenEditCandidateDialog(false);
+    } catch (error) {
+      console.error('Failed to edit candidate:', error);
+      alert(error.response.data.message || 'An error occurred. Please try again.');
+    }
+  };
+
   const getDepartmentName = (departmentId) => {
     const department = departments.find(dep => dep.ID === departmentId);
     return department ? department.Name : '';
@@ -328,7 +382,8 @@ const TalentPool = () => {
             emptyRows={emptyRows}
             handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
-            onViewCV={handleViewCV} // Add onViewCV prop
+            onViewCV={handleViewCV}
+            onEditCandidate={handleEditCandidateClick}
           />
         </Container>
       </Box>
@@ -484,6 +539,50 @@ const TalentPool = () => {
         <DialogActions>
           <Button onClick={handleEditDialogClose}>Cancel</Button>
           <Button onClick={handleEditFormSubmit} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={openEditCandidateDialog} onClose={() => setOpenEditCandidateDialog(false)}>
+        <DialogTitle>Edit Candidate</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Full Name"
+            fullWidth
+            variant="outlined"
+            name="name"
+            value={editCandidateData.name}
+            onChange={handleEditCandidateChange}
+          />
+          <TextField
+            margin="dense"
+            label="Email Address"
+            fullWidth
+            variant="outlined"
+            name="email"
+            value={editCandidateData.email}
+            onChange={handleEditCandidateChange}
+          />
+          <TextField
+            margin="dense"
+            select
+            label="Domicile"
+            fullWidth
+            variant="outlined"
+            name="domicile"
+            value={editCandidateData.domicile}
+            onChange={handleEditCandidateChange}
+          >
+            {regions.map((region, index) => (
+              <MenuItem key={index} value={region}>
+                {region}
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions sx={{ mr: 2 }}>
+          <Button onClick={() => setOpenEditCandidateDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleEditCandidateSubmit}>Save Changes</Button>
         </DialogActions>
       </Dialog>
       <Dialog open={openCVDialog} onClose={handleCVDialogClose} maxWidth="xl" fullWidth>

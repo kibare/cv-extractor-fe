@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, TablePagination, Menu, MenuItem } from '@mui/material';
 import { MoreHorizRounded } from '@mui/icons-material';
 
-const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage, onViewCV }) => {
+const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage, onViewCV, onEditCandidate }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
@@ -24,9 +24,15 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
   };
 
   const handleEdit = () => {
-    console.log('Edit Candidate', selectedRow);
+    if(selectedRow) {
+      onEditCandidate(selectedRow.id)
+    }
     handleClose();
   };
+
+  const handleDelete = () => {
+    handleClose();
+  }
 
   const handleQualification = () => {
     console.log(selectedRow.qualified === 'Qualified' ? 'Remove Qualification for' : 'Qualify', selectedRow);
@@ -69,6 +75,7 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
                     <MenuItem onClick={handleQualification}>
                       {selectedRow?.qualified === 'Qualified' ? 'Hapus Kualifikasi' : 'Kualifikasi Candidate'}
                     </MenuItem>
+                    <MenuItem onClick={handleDelete}>Delete Candidate</MenuItem>
                   </Menu>
                 </TableCell>
               </TableRow>
