@@ -70,6 +70,12 @@ export const editCandidate = async (id, data) => {
   return response.data;
 };
 
+export const qualifyCandidate = async (id) => {
+  const response = await apiClient.put(`/api/candidate/qualify-candidate/${id}`);
+  return response.data;
+};
+
+
 export const deleteCandidate = async (id) => {
   const response = await apiClient.delete(`/api/candidate/delete-candidate/${id}`);
   return response.data;

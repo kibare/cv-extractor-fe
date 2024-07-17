@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, TablePagination, Menu, MenuItem } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Paper, IconButton, TablePagination, Menu, MenuItem } from '@mui/material';
 import { MoreHorizRounded } from '@mui/icons-material';
 
-const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage, onViewCV, onEditCandidate, onDeleteCandidate }) => {
+const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage, onViewCV, onEditCandidate, onDeleteCandidate, onQualifyCandidate }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
@@ -38,7 +38,9 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
   }
 
   const handleQualification = () => {
-    console.log(selectedRow.qualified === 'Qualified' ? 'Remove Qualification for' : 'Qualify', selectedRow);
+    if (selectedRow) {
+      onQualifyCandidate(selectedRow.id);
+    }
     handleClose();
   };
 
@@ -63,7 +65,9 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
                 <TableCell>{row.position}</TableCell>
                 <TableCell>{row.department}</TableCell>
                 <TableCell>{row.score}</TableCell>
-                <TableCell>{row.qualified}</TableCell>
+                <TableCell>
+                  <Chip label={row.qualified === "Qualified" ? 'Qualified' : 'Not Qualified'} color={row.qualified === "Qualified" ?  "success" : "error"} variant='outlined'></Chip>
+                </TableCell>
                 <TableCell>
                   <IconButton onClick={(event) => handleClick(event, row)}>
                     <MoreHorizRounded />

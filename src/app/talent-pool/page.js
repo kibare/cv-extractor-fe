@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
 import { fetchPositions } from '@/redux/slices/positionSlice';
 import { fetchCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/candidateSlice';
-import { editPosition, archivePosition, createCandidate, trashPosition, getCandidateDetails, editCandidate, deleteCandidate } from '@/services/api';
+import { editPosition, archivePosition, createCandidate, trashPosition, getCandidateDetails, editCandidate, deleteCandidate, qualifyCandidate } from '@/services/api';
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
 
@@ -169,6 +169,17 @@ const TalentPool = () => {
       }
     }
   };
+
+  const handleQualifyCandidate = async (candidateId) => {
+    try {
+      await qualifyCandidate(candidateId);
+      dispatch(fetchAllCandidates());
+    } catch (error) {
+      console.error('Failed to qualify candidate:', error);
+      alert(error.response.data.message || 'An error occurred. Please try again.');
+    }
+  };
+  
 
   const handleDeleteClick = async () => {
     if (selectedPosition) {
@@ -395,6 +406,7 @@ const TalentPool = () => {
             onViewCV={handleViewCV}
             onEditCandidate={handleEditCandidateClick}
             onDeleteCandidate={handleDeleteCandidate}
+            onQualifyCandidate={handleQualifyCandidate}
           />
         </Container>
       </Box>
