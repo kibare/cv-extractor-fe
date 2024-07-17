@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, TablePagination, Menu, MenuItem } from '@mui/material';
 import { MoreHorizRounded } from '@mui/icons-material';
 
-const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage, onViewCV, onEditCandidate }) => {
+const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handleChangeRowsPerPage, onViewCV, onEditCandidate, onDeleteCandidate }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
 
@@ -31,6 +31,9 @@ const DataTable = ({ data, page, rowsPerPage, emptyRows, handleChangePage, handl
   };
 
   const handleDelete = () => {
+    if(selectedRow) {
+      onDeleteCandidate(selectedRow.id);
+    }
     handleClose();
   }
 

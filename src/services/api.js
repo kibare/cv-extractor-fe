@@ -70,6 +70,11 @@ export const editCandidate = async (id, data) => {
   return response.data;
 };
 
+export const deleteCandidate = async (id) => {
+  const response = await apiClient.delete(`/api/candidate/delete-candidate/${id}`);
+  return response.data;
+};
+
 export const getCandidatesByFilters = async (filters) => {
   const response = await apiClient.post('/api/candidate/get-candidates-by-filters', filters);
   return response.data;

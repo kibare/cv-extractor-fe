@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments } from '@/redux/slices/departmentSlice';
 import { fetchPositions } from '@/redux/slices/positionSlice';
 import { fetchCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/candidateSlice';
-import { editPosition, archivePosition, createCandidate, trashPosition, getCandidateDetails, editCandidate } from '@/services/api';
+import { editPosition, archivePosition, createCandidate, trashPosition, getCandidateDetails, editCandidate, deleteCandidate } from '@/services/api';
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
 
@@ -260,6 +260,16 @@ const TalentPool = () => {
     }
   };
 
+  const handleDeleteCandidate = async (candidateId) => {
+    try {
+      await deleteCandidate(candidateId);
+      dispatch(fetchAllCandidates());
+    } catch (error) {
+      console.error('Failed to delete candidate:', error);
+      alert(error.response.data.message || 'An error occurred. Please try again.');
+    }
+  };
+
   const getDepartmentName = (departmentId) => {
     const department = departments.find(dep => dep.ID === departmentId);
     return department ? department.Name : '';
@@ -384,6 +394,7 @@ const TalentPool = () => {
             handleChangeRowsPerPage={handleChangeRowsPerPage}
             onViewCV={handleViewCV}
             onEditCandidate={handleEditCandidateClick}
+            onDeleteCandidate={handleDeleteCandidate}
           />
         </Container>
       </Box>
