@@ -14,6 +14,7 @@ import { fetchPositionDetails, fetchPositions } from '@/redux/slices/positionSli
 import { fetchAllCandidates } from '@/redux/slices/candidateSlice';
 import SearchBar from '@/components/common/searchBar';
 
+
 const PositionDetails = () => {
   const { positionId } = useParams();
   const router = useRouter();
