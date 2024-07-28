@@ -11,6 +11,7 @@ import { fetchCandidatesByFilters, fetchAllCandidates } from '@/redux/slices/can
 import { editPosition, archivePosition, createCandidate, trashPosition, getCandidateDetails, editCandidate, deleteCandidate, qualifyCandidate } from '@/services/api';
 import SearchBar from '@/components/common/searchBar';
 import DataTable from '@/components/common/dataTable';
+import axios from 'axios';
 
 const TalentPool = () => {
   const dispatch = useDispatch();
@@ -48,6 +49,7 @@ const TalentPool = () => {
     email: '',
     domicile: '',
     positionId: '',
+    score: 0
   });
 
   const departments = useSelector((state) => state.departments.departments);
@@ -207,22 +209,92 @@ const TalentPool = () => {
   };
 
   const handleNewCandidateSubmit = async () => {
-    const formData = new FormData();
-    formData.append('name', newCandidateData.name);
-    formData.append('email', newCandidateData.email);
-    formData.append('domicile', newCandidateData.domicile);
-    formData.append('positionId', newCandidateData.positionId);
-    if (file) {
-      formData.append('cv_file', file);
+    if (!file) {
+      alert('Please upload a CV file');
+      return;
     }
-
+  
+    const formData = new FormData();
+    formData.append('file', file); // Pastikan nama 'file' sama dengan yang diharapkan oleh server
+  
     try {
-      await createCandidate(formData);
+      // Ekstraksi data dari CV menggunakan axios langsung
+      console.log('Mengirimkan permintaan ekstraksi CV...');
+      console.log('Data yang dikirim untuk ekstraksi CV:', formData.get('file'));  // Log file data
+      
+      // Log semua isi FormData
+      for (var pair of formData.entries()) {
+        console.log(pair[0] + ', ' + pair[1]);
+      }
+  
+      const extractResponse = await axios.post('http://localhost:8000/getInformation/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+  
+      console.log('Response dari ekstraksi CV:', extractResponse);
+      const extractedData = extractResponse.data;
+  
+      // Ambil kualifikasi dari posisi yang dipilih
+      const position = allPositions.find(pos => pos.ID === parseInt(selectedPosition));
+      const qualification = position ? position.Qualification : '';
+      console.log('Qualification dari posisi:', qualification);
+  
+      // Bentuk data untuk penilaian CV
+      const scoringData = {
+        sentences: qualification.split('.').map(sentence => sentence.trim()).filter(sentence => sentence),
+        cv: extractedData.entities
+      };
+  
+      console.log('Data yang dikirim untuk penilaian CV:', scoringData);
+  
+      console.log('Mengirimkan permintaan penilaian CV...');
+      // Penilaian CV menggunakan axios langsung
+      const scoreResponse = await axios.post('http://localhost:5000/analyze_cv', scoringData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      console.log('Response dari penilaian CV:', scoreResponse);
+      const scoringResult = scoreResponse.data;
+      const score = scoringResult.average_similarity;
+  
+      // Buat kandidat baru dengan skor
+      const candidateFormData = new FormData();
+      candidateFormData.append('name', newCandidateData.name);
+      candidateFormData.append('email', newCandidateData.email);
+      candidateFormData.append('domicile', newCandidateData.domicile);
+      candidateFormData.append('positionId', newCandidateData.positionId);
+      candidateFormData.append('score', score); // tambahkan score di sini
+      candidateFormData.append('cv_file', file);
+  
+      console.log('Data yang dikirim untuk membuat kandidat baru:', candidateFormData.get('cv_file'));
+  
+      console.log('Mengirimkan permintaan untuk membuat kandidat baru...');
+      await createCandidate(candidateFormData);
+      console.log('Kandidat baru berhasil dibuat');
       dispatch(fetchAllCandidates());
       handleDialogClose();
     } catch (error) {
       console.error('Failed to create candidate:', error);
-      alert(error.response.data.message || 'An error occurred. Please try again.');
+  
+      if (error.response) {
+        // Server responded with a status other than 200 range
+        console.error('Error data:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+        alert(error.response.data.message || 'An error occurred. Please try again.');
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('Error request:', error.request);
+        alert('No response received from server. Please try again later.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error message:', error.message);
+        alert('An error occurred. Please try again.');
+      }
     }
   };
 
@@ -293,9 +365,11 @@ const TalentPool = () => {
     name: candidate.Name,
     position: candidate.Position.Name,
     department: getDepartmentName(candidate.Position.DepartmentID) || candidate.Position.Department.Name,
-    score: candidate.Score,
+    score:  candidate.Score > 0 ? `${Math.round(candidate.Score * 100)}/100` : '-/100',
     qualified: candidate.IsQualified ? 'Qualified' : 'Not Qualified',
   }));
+
+  console.log("Data: ", data)
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.length - page * rowsPerPage);
 
